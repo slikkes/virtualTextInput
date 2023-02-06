@@ -1,4 +1,4 @@
-const dodler = {
+window.dodler = {
   state: {
     root: null,
     isOpen: false,
@@ -39,6 +39,8 @@ const dodler = {
     const textBtnHolder = this.viewService.createElement('div', contentRoot, {id:"textBtnHolder"});
     this.createTextBtns();
 
+    textInput.addEventListener('keydown', event=>event.stopPropagation());
+
     this.previousActiveElement = null;
 
     submitBtn.onmousedown = ()=> {
@@ -54,7 +56,6 @@ const dodler = {
     }
   },
   createTextBtns(){
-    console.log(this.state);
     const textBtnHolder = this.state.root.querySelector("#textBtnHolder")
     textBtnHolder.innerHTML = "";
     for (var item of this.dataService.getAllItems()) {
@@ -215,6 +216,8 @@ const dodler = {
       }
       .dodler-root .textBtn{
         background-color: #8b8a8a;
+        margin: 2px 4px;
+
       }
       .dodler-root .textBtn:before{
         content:attr(data-value);
