@@ -74,17 +74,29 @@ const dodler = {
       for (var char of text) {
         this.inputChar(char, target);
       }
-      this.inputChar('Enter');
+      this.hitEnter();
     },
     inputChar(char, target){
       if(target && target.tagName.toLowerCase() === 'input' ){
         target.value += char;
       }
 
-      document.body.dispatchEvent(new KeyboardEvent("keydown", {
+      window.dispatchEvent(new KeyboardEvent("keydown", {
         key: char,
+        keyCode: char.charCodeAt(0)
       }));
-    }
+    },
+    hitEnter() {
+      let keydown = new KeyboardEvent('keydown', {
+        code: 'Enter',
+        key: 'Enter',
+        charCode: 13,
+        keyCode: 13,
+        view: window,
+        bubbles: true
+      });
+      let res = window.dispatchEvent(keydown);
+    },
   },
   dataService:{
     items: [],
