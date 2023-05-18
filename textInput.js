@@ -1,4 +1,4 @@
-const dodler = {
+window.dodler = {
   state: {
     root: null,
     isOpen: false,
@@ -42,7 +42,12 @@ const dodler = {
     const textBtnHolder = this.viewService.createElement('div', contentRoot, {id:"textBtnHolder"});
     this.createTextBtns();
 
+<<<<<<< HEAD
     textInput.addEventListener('change', event=>event.stopPropagation())
+=======
+    textInput.addEventListener('keydown', event=>event.stopPropagation());
+
+>>>>>>> ea38a127204bbc269e09d024eadeda9868d4d2d0
     this.previousActiveElement = null;
 
     submitBtn.onmousedown = ()=> {
@@ -61,7 +66,6 @@ const dodler = {
     }
   },
   createTextBtns(){
-    console.log(this.state);
     const textBtnHolder = this.state.root.querySelector("#textBtnHolder")
 
     textBtnHolder.innerHTML = "";
@@ -98,7 +102,7 @@ const dodler = {
       for (var char of text) {
         this.inputChar(char, target);
       }
-      this.inputChar('Enter');
+      this.hitEnter();
     },
     inputChar(char, target){
       if(target && target.tagName.toLowerCase() === 'input' ){
@@ -107,8 +111,20 @@ const dodler = {
 
       window.dispatchEvent(new KeyboardEvent("keydown", {
         key: char,
+        keyCode: char.charCodeAt(0)
       }));
-    }
+    },
+    hitEnter() {
+      let keydown = new KeyboardEvent('keydown', {
+        code: 'Enter',
+        key: 'Enter',
+        charCode: 13,
+        keyCode: 13,
+        view: window,
+        bubbles: true
+      });
+      let res = window.dispatchEvent(keydown);
+    },
   },
   dataService:{
     items: new Set(),
@@ -232,6 +248,7 @@ const dodler = {
       }
       .dodler-root .textBtn{
         background-color: #8b8a8a;
+<<<<<<< HEAD
         margin:2px;
         cursor: pointer;
         font-family:monospace;
@@ -245,6 +262,10 @@ const dodler = {
       }
       .dodler-root .textBtn:active{
         background-color: #8ca080;
+=======
+        margin: 2px 4px;
+
+>>>>>>> ea38a127204bbc269e09d024eadeda9868d4d2d0
       }
       .dodler-root .textBtn:before{
         content:attr(data-value);
