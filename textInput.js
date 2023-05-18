@@ -10,6 +10,9 @@ const dodler = {
     this.dataService.loadFromStorage();
     this._createToggleBtn(this.state.root)
     this._createContent(this.state.root)
+    this.state.root.addEventListener("drag", ev=>{
+      console.log(ev.x, ev.y);
+    })
 
   },
   _createToggleBtn(root){
@@ -25,7 +28,7 @@ const dodler = {
         contentRoot.style.width=0;
         contentRoot.style.height=0;
       }else{
-        contentRoot.style.width="240px";
+        contentRoot.style.width="270px";
         this._setHeightByContent();
       }
       root.classList.toggle('active')
@@ -39,6 +42,7 @@ const dodler = {
     const textBtnHolder = this.viewService.createElement('div', contentRoot, {id:"textBtnHolder"});
     this.createTextBtns();
 
+    textInput.addEventListener('change', event=>event.stopPropagation())
     this.previousActiveElement = null;
 
     submitBtn.onmousedown = ()=> {
@@ -48,26 +52,46 @@ const dodler = {
 
       const text = textInput.value;
       this.dataService.addItem(text);
-
-      this.textInputService.inputText(text, this.previousActiveElement);
       this.createTextBtns();
+
+      if(this.state.root.contains(this.previousActiveElement)){
+        return ;
+      }
+      this.textInputService.inputText(text, this.previousActiveElement);
     }
   },
   createTextBtns(){
     console.log(this.state);
     const textBtnHolder = this.state.root.querySelector("#textBtnHolder")
+
     textBtnHolder.innerHTML = "";
-    for (var item of this.dataService.getAllItems()) {
-      const btn = this.viewService.createElement('button', textBtnHolder, {className:"textBtn", data:{value: item}});
-      btn.onmousedown = ()=> {
+    for ( item of this.dataService.getAllItems()) {
+      const btn = this.viewService.createElement('div', textBtnHolder, {className:"textBtn"});
+      const label = this.viewService.createElement('span', btn, {innerHTML: item, data:{value: item}});
+      const delHldr = this.viewService.createElement('div', btn, {className: 'delete-holder'});
+      const delBtn = this.viewService.createElement('div', delHldr, {className: 'delete', data:{value: item}});
+
+      label.onmousedown = ()=> {
         this.previousActiveElement = document.activeElement;
       };
-      btn.onclick = event=>{
+      label.onclick = event=>{
+        if(this.state.root.contains(this.previousActiveElement)){
+          return ;
+        }
         this.textInputService.inputText(event.target.dataset.value , this.previousActiveElement);
       }
+      delBtn.onclick = event=>{
+        this.deleteItem(event.target.dataset.value);
+        event.stopPropagation()
+      }
+
     }
   },
   _setHeightByContent(){
+  },
+  deleteItem(idx){
+    this.dataService.deleteItem(idx);
+    this.createTextBtns();
   },
   textInputService:{
     inputText(text, target){
@@ -81,25 +105,30 @@ const dodler = {
         target.value += char;
       }
 
-      document.body.dispatchEvent(new KeyboardEvent("keydown", {
+      window.dispatchEvent(new KeyboardEvent("keydown", {
         key: char,
       }));
     }
   },
   dataService:{
-    items: [],
+    items: new Set(),
     loadFromStorage(){
-      this.items = JSON.parse(localStorage.getItem('text-input-items')) ?? []
+      const arr = JSON.parse(localStorage.getItem('text-input-items')) ?? []
+      this.items = new Set(arr)
+
     },
     saveItemsToStorage(){
-      localStorage.setItem('text-input-items', JSON.stringify(this.items))
+      localStorage.setItem('text-input-items', JSON.stringify(Array.from(this.items)))
     },
     addItem(item){
-      this.items.push(item)
+      let arr = Array.from(this.items);
+      arr.unshift(item)
+      this.items = new Set(arr)
       this.saveItemsToStorage()
     },
-    deleteItem(idx){
-      this.items.splice(idx,1);
+    deleteItem(item){
+      console.log(item);
+      this.items.delete(item);
       this.saveItemsToStorage()
     },
     getAllItems(){
@@ -203,10 +232,44 @@ const dodler = {
       }
       .dodler-root .textBtn{
         background-color: #8b8a8a;
+        margin:2px;
+        cursor: pointer;
+        font-family:monospace;
+        display:flex;
+      }
+      .dodler-root .textBtn span{
+        padding:4px 6px;
+      }
+      .dodler-root .textBtn:hover{
+        background-color: #6f7c65;
+      }
+      .dodler-root .textBtn:active{
+        background-color: #8ca080;
       }
       .dodler-root .textBtn:before{
         content:attr(data-value);
       }
+      .dodler-root .textBtn .delete-holder{
+        padding-right: 2px;
+        padding-top: 4px;
+        border-right: 8px #823a3a solid;
+      }
+      .dodler-root .textBtn .delete-holder:hover{
+        border:none;
+        background-color:#cf1111;
+      }
+      .dodler-root .textBtn .delete-holder:active{
+        border:none;
+        background-color:#fa1d1d;;
+      }
+      .dodler-root .textBtn .delete-holder .delete{
+        visibility:hidden;
+      }
+      .dodler-root .textBtn .delete-holder:hover .delete{
+        visibility:visible;
+        content: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' width='22px' height='22px'%3E%3Cpath d='M 10 2 L 9 3 L 4 3 L 4 5 L 5 5 L 5 20 C 5 20.522222 5.1913289 21.05461 5.5683594 21.431641 C 5.9453899 21.808671 6.4777778 22 7 22 L 17 22 C 17.522222 22 18.05461 21.808671 18.431641 21.431641 C 18.808671 21.05461 19 20.522222 19 20 L 19 5 L 20 5 L 20 3 L 15 3 L 14 2 L 10 2 z M 7 5 L 17 5 L 17 20 L 7 20 L 7 5 z M 9 7 L 9 18 L 11 18 L 11 7 L 9 7 z M 13 7 L 13 18 L 15 18 L 15 7 L 13 7 z'/%3E%3C/svg%3E");
+      }
+
       .btnHolder{
         display:flex;
         justify-content:end;
@@ -221,6 +284,10 @@ const dodler = {
         margin: 12px;
         padding: 8px 12px;
         background-color: #0000ff24;
+        display:flex;
+        flex-wrap: wrap;
+        max-height: 200px;
+        overflow-y: scroll;
       }
       `;
       document.getElementsByTagName('head')[0].appendChild(style);
