@@ -65,11 +65,11 @@ const dodler = {
     const textBtnHolder = this.state.root.querySelector("#textBtnHolder")
 
     textBtnHolder.innerHTML = "";
-    for ( item of this.dataService.getAllItems()) {
+    for ( [idx, item] of this.dataService.getAllItems().entries()) {
       const btn = this.viewService.createElement('div', textBtnHolder, {className:"textBtn"});
-      const label = this.viewService.createElement('span', btn, {innerHTML: item, data:{value: item}});
+      const label = this.viewService.createElement('span', btn, {innerHTML: item, data:{value: item, idx}});
       const delHldr = this.viewService.createElement('div', btn, {className: 'delete-holder'});
-      const delBtn = this.viewService.createElement('div', delHldr, {className: 'delete', data:{value: item}});
+      const delBtn = this.viewService.createElement('div', delHldr, {className: 'delete', data:{value: idx}});
 
       label.onmousedown = ()=> {
         this.previousActiveElement = document.activeElement;
@@ -79,6 +79,8 @@ const dodler = {
           return ;
         }
         this.textInputService.inputText(event.target.dataset.value , this.previousActiveElement);
+        this.dataService.prependWithIdx(event.target.dataset.idx)
+        this.createTextBtns();
       }
       delBtn.onclick = event=>{
         this.deleteItem(event.target.dataset.value);
@@ -111,28 +113,31 @@ const dodler = {
     }
   },
   dataService:{
-    items: new Set(),
+    items: [],
     loadFromStorage(){
-      const arr = JSON.parse(localStorage.getItem('text-input-items')) ?? []
-      this.items = new Set(arr)
+      this.items = JSON.parse(localStorage.getItem('text-input-items')) ?? []
 
     },
     saveItemsToStorage(){
-      localStorage.setItem('text-input-items', JSON.stringify(Array.from(this.items)))
+      localStorage.setItem('text-input-items', JSON.stringify(this.items))
     },
     addItem(item){
-      let arr = Array.from(this.items);
-      arr.unshift(item)
-      this.items = new Set(arr)
+      if(this.items.includes(item)){
+        return;
+      }
+      this.items.unshift(item)
       this.saveItemsToStorage()
     },
-    deleteItem(item){
-      console.log(item);
-      this.items.delete(item);
+    deleteItem(idx){
+      this.items.splice(idx,1);
       this.saveItemsToStorage()
     },
     getAllItems(){
       return this.items;
+    },
+    prependWithIdx(idx){
+      let item = this.items.splice(idx,1);
+      this.items.unshift(item);
     }
   },
   viewService:{
@@ -252,7 +257,7 @@ const dodler = {
       .dodler-root .textBtn .delete-holder{
         padding-right: 2px;
         padding-top: 4px;
-        border-right: 8px #823a3a solid;
+        border-right: 12px #823a3a solid;
       }
       .dodler-root .textBtn .delete-holder:hover{
         border:none;
